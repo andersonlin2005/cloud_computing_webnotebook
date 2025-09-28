@@ -1,0 +1,45 @@
+<!-- templates/edit.html -->
+<!doctype html>
+<html lang="zh-Hant">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>{{ '編輯筆記' if note else '新增筆記' }}</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    </head>
+    <body>
+        <header>
+            <h1>{{ '編輯筆記' if note else '新增筆記' }}</h1>
+            <div class="shortcuts">
+                快捷鍵：`---` 分隔線、`pic` 圖片、`todo` 待辦、`# ` 標題、`>` 引言、``` 程式區塊、`date` 插入日期、Ctrl+S 儲存
+            </div>
+        </header>
+        <main>
+            <form id="noteForm" action="{{ url_for('save_note') }}" method="post">
+                <input type="hidden" name="id" value="{{ note['id'] if note else '' }}">
+                <input type="text" name="title" placeholder="標題" value="{{ note['title'] if note else '' }}">
+                <input type="text" name="tags" placeholder="標籤（逗號分隔）" value="{{ note['tags'] if note else '' }}">
+                <div class="editor-area">
+                    <textarea id="editor" name="content" placeholder="在這裡輸入筆記（支援快捷指令）">{{ note['content'] if note else '' }}</textarea>
+                    <div id="preview" class="preview-area"></div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn">儲存 (Ctrl+S)</button>
+                    {% if note %}
+                    <button id="delBtn" type="button" class="btn danger">刪除</button>
+                    {% endif %}
+                </div>
+            </form>
+
+            <!-- hidden file input for "pic" shortcut -->
+            <input id="imageInput" type="file" accept="image/*" style="display:none">
+        </main>
+
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <script src="{{ url_for('static', filename='app.js') }}"></script>
+        <script>
+            const uploadUrl = "{{ url_for('upload_image') }}";
+            window.APP_INIT = { uploadUrl };
+        </script>
+    </body>
+</html>
