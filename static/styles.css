@@ -1,0 +1,163 @@
+.editor-area textarea.dragover {
+    border: 2px dashed #007bff;
+    background-color: #f0f8ff;
+}
+
+/* Code block styling */
+pre, code {
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    padding: 2px 4px;
+}
+pre {
+    padding: 10px;
+    overflow-x: auto;
+}
+/* KaTeX math styling */
+.katex {
+    font-size: 1.1em;
+}
+.actions form {
+    display: inline-flex;
+    gap: 10px;
+    margin-right: 10px;
+}
+.actions input[type="text"] {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+/* Responsive editor area */
+.editor-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.editor-section, .preview-section {
+    flex: 1;
+    min-width: 300px;
+}
+
+.editor-section h3, .preview-section h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 1.1em;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #007bff;
+}
+
+.editor-section textarea {
+    width: 100%;
+    min-height: 400px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.preview-area {
+    width: 100%;
+    min-height: 400px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: #fafafa;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.preview-area h1, .preview-area h2, .preview-area h3,
+.preview-area h4, .preview-area h5, .preview-area h6 {
+    color: #333;
+    margin-top: 0;
+}
+
+.preview-area p {
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.preview-area ul, .preview-area ol {
+    padding-left: 20px;
+}
+
+.preview-area blockquote {
+    border-left: 4px solid #007bff;
+    margin: 10px 0;
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+}
+
+.preview-area img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+.preview-area table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0;
+}
+
+.preview-area table th, .preview-area table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.preview-area table th {
+    background-color: #f2f2f2;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .editor-container {
+        flex-direction: column;
+    }
+    
+    .editor-section, .preview-section {
+        min-width: 100%;
+    }
+    
+    .editor-section textarea, .preview-area {
+        min-height: 300px;
+    }
+}
+
+.editor-area {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+.editor-area textarea, .editor-area .preview-area {
+    flex: 1;
+    min-width: 300px;
+    min-height: 400px;
+}
+
+/* Button styling */
+.btn {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+}
+.btn:hover {
+    background-color: #0056b3;
+}
+.btn.danger {
+    background-color: #dc3545;
+}
+.btn.danger:hover {
+    background-color: #b02a37;
+}

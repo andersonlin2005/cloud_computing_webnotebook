@@ -19,9 +19,15 @@
                 <input type="hidden" name="id" value="{{ note['id'] if note else '' }}">
                 <input type="text" name="title" placeholder="標題" value="{{ note['title'] if note else '' }}">
                 <input type="text" name="tags" placeholder="標籤（逗號分隔）" value="{{ note['tags'] if note else '' }}">
-                <div class="editor-area">
-                    <textarea id="editor" name="content" placeholder="在這裡輸入筆記（支援快捷指令）">{{ note['content'] if note else '' }}</textarea>
-                    <div id="preview" class="preview-area"></div>
+                <div class="editor-container">
+                    <div class="editor-section">
+                        <h3>編輯</h3>
+                        <textarea id="editor" name="content" placeholder="在這裡輸入筆記（支援快捷指令）">{{ note['content'] if note else '' }}</textarea>
+                    </div>
+                    <div class="preview-section">
+                        <h3>預覽</h3>
+                        <div id="preview" class="preview-area"></div>
+                    </div>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn">儲存 (Ctrl+S)</button>
@@ -43,3 +49,26 @@
         </script>
     </body>
 </html>
+<script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify@4.17.0/dist/tagify.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify@4.17.0/dist/tagify.css">
+<script>
+    const tagsInput = document.querySelector('input[name="tags"]');
+    fetch('/tags')
+        .then(res => res.json())
+        .then(tags => {
+            new Tagify(tagsInput, {
+                whitelist: tags,
+                maxTags: 10,
+                dropdown: { maxItems: 20, enabled: 0 }
+            });
+        });
+</script>
+<!-- Add KaTeX and highlight.js -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/javascript.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/lib/marked.min.js"></script>
+<script src="{{ url_for('static', filename='app.js') }}"></script>

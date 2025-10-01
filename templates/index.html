@@ -11,6 +11,11 @@
         <header>
             <h1>我的筆記</h1>
             <div class="actions">
+                <form id="searchForm" action="{{ url_for('index') }}" method="get">
+                    <input type="text" name="q" placeholder="搜尋標題..." value="{{ request.args.get('q', '') }}">
+                    <input type="text" name="tag" placeholder="標籤篩選" value="{{ request.args.get('tag', '') }}">
+                    <button type="submit" class="btn">搜尋</button>
+                </form>
                 <a class="btn" href="{{ url_for('new_note') }}">+ 新增筆記 (Ctrl+N)</a>
             </div>
         </header>
@@ -23,7 +28,6 @@
                     <li>
                         <a class="note-title" href="{{ url_for('edit_note', note_id=n['id']) }}">{{ n['title'] }}</a>
                         <div class="meta">更新：{{ n['updated_at'] }}</div>
-                        <div class="preview">{{ n['preview'] }}{% if n['preview']|length == 200 %}...{% endif %}</div>
                     </li>
                 {% endfor %}
                 </ul>
@@ -31,3 +35,11 @@
         </main>
     </body>
 </html>
+<script>
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+            e.preventDefault();
+            window.location.href = "{{ url_for('new_note') }}";
+        }
+    });
+</script>
