@@ -35,34 +35,35 @@
                 <div class="form-actions">
                     <button type="submit" class="btn">儲存</button>
                     <button id="downloadBtn" type="button" class="btn">下載 HTML</button>
-
-                    <!-- 只要不是新建頁面，也就是有 note.id 時，顯示刪除 -->
-                    {% if note and note.id %}
                     <button id="delBtn" type="button" class="btn danger">刪除</button>
-                    {% endif %}
                 </div>
 
                 <script>
-                document.addEventListener("DOMContentLoaded", () => {
-                    const delBtn = document.getElementById("delBtn");
-                    if (delBtn) {
-                        delBtn.addEventListener("click", async () => {
-                            if (!confirm("確定要刪除此筆記嗎？")) return;
-                            const noteId = "{{ note.id }}";
-                            try {
-                                const res = await fetch(`/note/${noteId}/delete`, { method: "POST" });
-                                if (res.ok) {
-                                    alert("刪除成功！");
-                                    window.location.href = "/";
-                                } else {
-                                    alert("刪除失敗。");
-                                }
-                            } catch (err) {
-                                alert("刪除時發生錯誤。");
+                    const delBtn = document.getElementById('delBtn');
+
+                    delBtn.addEventListener('click', async () => {
+                        const idField = document.querySelector('input[name="id"]');
+                        const noteId = idField?.value;
+
+                        if (!noteId) {
+                            // ✅ 還沒儲存的筆記 → 回到 / 
+                            if (confirm('是否確認要放棄該筆記？')) {
+                                window.location.href = '/';
                             }
-                        });
-                    }
-                });
+                            return;
+                        }
+
+                        // ✅ 已儲存的筆記 → 刪除後回首頁
+                        if (confirm('確定要刪除此筆記嗎？')) {
+                            const res = await fetch(`/note/${noteId}/delete`, { method: 'POST' });
+                            if (res.ok) {
+                                alert('筆記已刪除');
+                                window.location.href = '/';
+                            } else {
+                                alert('刪除失敗');
+                            }
+                        }
+                    });
                 </script>
             </form>
 
