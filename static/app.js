@@ -62,10 +62,11 @@ async function handleShortcut(sc, lineStart, pos) {
 // Update keydown event listener
 editor.addEventListener('keydown', async (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-        document.getElementById('noteForm').requestSubmit();
-        return;
-    }
+    e.preventDefault(); // 阻止瀏覽器預設儲存行為
+    downloadAsHTML();   // 改成下載 HTML
+    return;
+}
+
 
     if (e.key === 'Enter') {
         const pos = editor.selectionStart;
@@ -217,3 +218,61 @@ editor.addEventListener('input', renderPreview);
 document.addEventListener('DOMContentLoaded', () => {
     renderPreview();
 });
+
+// --- 點擊「下載 HTML」按鈕 ---
+const downloadBtn = document.getElementById('downloadBtn');
+if (downloadBtn) {
+    downloadBtn.addEventListener('click', () => {
+        downloadAsHTML();
+    });
+}
+
+// --- 將筆記內容轉成 HTML 並下載 ---
+function downloadAsHTML() {
+    const title = document.querySelector('input[name="title"]').value || '未命名筆記';
+    const content = document.getElementById('editor').value;
+
+    // 這裡用 marked + highlight.js + KaTeX 來處理 markdown、程式碼與公式
+    const renderedHTML = marked.parse(content);
+    const fullHTML = `
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+<style>
+body { font-family: 'Microsoft JhengHei', sans-serif; margin: 40px; background: #fafafa; }
+pre code { background: #f4f4f4; padding: 8px; border-radius: 5px; display: block; }
+hr { border: none; border-top: 1px solid #ccc; margin: 20px 0; }
+img { max-width: 100%; border-radius: 5px; }
+blockquote { color: #555; border-left: 4px solid #ccc; margin-left: 0; padding-left: 10px; }
+</style>
+</head>
+<body>
+<h1>${title}</h1>
+${renderedHTML}
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    renderMathInElement(document.body, {
+        delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "$", right: "$", display: false }
+        ]
+    });
+});
+</script>
+</body>
+</html>
+`;
+
+    // 建立 blob 並觸發下載
+    const blob = new Blob([fullHTML], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${title}.html`;
+    a.click();
+}

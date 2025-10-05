@@ -19,27 +19,56 @@
                 <input type="hidden" name="id" value="{{ note['id'] if note else '' }}">
                 <input type="text" name="title" placeholder="標題" value="{{ note['title'] if note else '' }}">
                 <input type="text" name="tags" placeholder="標籤（逗號分隔）" value="{{ note['tags'] if note else '' }}">
+
                 <div class="editor-container">
                     <div class="editor-section">
                         <h3>編輯</h3>
                         <textarea id="editor" name="content" placeholder="在這裡輸入筆記（支援快捷指令）">{{ note['content'] if note else '' }}</textarea>
                     </div>
+
                     <div class="preview-section">
                         <h3>預覽</h3>
                         <div id="preview" class="preview-area"></div>
                     </div>
-                </div>
+                </div> <!-- ✅ 關閉 editor-container -->
+
                 <div class="form-actions">
-                    <button type="submit" class="btn">儲存 (Ctrl+S)</button>
-                    {% if note %}
+                    <button type="submit" class="btn">儲存</button>
+                    <button id="downloadBtn" type="button" class="btn">下載 HTML</button>
+
+                    <!-- 只要不是新建頁面，也就是有 note.id 時，顯示刪除 -->
+                    {% if note and note.id %}
                     <button id="delBtn" type="button" class="btn danger">刪除</button>
                     {% endif %}
                 </div>
+
+                <script>
+                document.addEventListener("DOMContentLoaded", () => {
+                    const delBtn = document.getElementById("delBtn");
+                    if (delBtn) {
+                        delBtn.addEventListener("click", async () => {
+                            if (!confirm("確定要刪除此筆記嗎？")) return;
+                            const noteId = "{{ note.id }}";
+                            try {
+                                const res = await fetch(`/note/${noteId}/delete`, { method: "POST" });
+                                if (res.ok) {
+                                    alert("刪除成功！");
+                                    window.location.href = "/";
+                                } else {
+                                    alert("刪除失敗。");
+                                }
+                            } catch (err) {
+                                alert("刪除時發生錯誤。");
+                            }
+                        });
+                    }
+                });
+                </script>
             </form>
 
-            <!-- hidden file input for "pic" shortcut -->
             <input id="imageInput" type="file" accept="image/*" style="display:none">
         </main>
+
 
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <script src="{{ url_for('static', filename='app.js') }}"></script>
