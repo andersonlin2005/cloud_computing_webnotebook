@@ -78,10 +78,11 @@ pre {
     margin-top: 0;
 }
 
-.preview-area p {
+ .preview-area p {
+    margin: 0 0 10px 0; /* 上方去掉，底部 10px */
     line-height: 1.6;
-    margin-bottom: 10px;
 }
+
 
 .preview-area ul, .preview-area ol {
     padding-left: 20px;
