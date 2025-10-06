@@ -1,164 +1,282 @@
-.editor-area textarea.dragover {
-    border: 2px dashed #007bff;
-    background-color: #f0f8ff;
+/* General Styles */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background-color: #fff;
+  color: #333;
 }
 
-/* Code block styling */
-pre, code {
-    background-color: #f5f5f5;
-    border-radius: 4px;
-    padding: 2px 4px;
+/* Dark Mode */
+body.dark-mode {
+  background-color: #1a1a1a;
+  color: #ddd;
 }
-pre {
-    padding: 10px;
-    overflow-x: auto;
+body.dark-mode .editor-section textarea,
+body.dark-mode .preview-area {
+  background-color: #2d2d2d;
+  border-color: #444;
+  color: #ddd;
 }
-/* KaTeX math styling */
-.katex {
-    font-size: 1.1em;
+body.dark-mode .editor-section h3,
+body.dark-mode .preview-section h3 {
+  color: #ddd;
 }
-.actions form {
-    display: inline-flex;
-    gap: 10px;
-    margin-right: 10px;
+body.dark-mode .preview-area h1,
+body.dark-mode .preview-area h2,
+body.dark-mode .preview-area h3,
+body.dark-mode .preview-area h4,
+body.dark-mode .preview-area h5,
+body.dark-mode .preview-area h6 {
+  color: #ddd;
 }
-.actions input[type="text"] {
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+body.dark-mode .preview-area blockquote {
+  background-color: #3c3c3c;
 }
-/* Responsive editor area */
+body.dark-mode .preview-area table th {
+  background-color: #444;
+}
+body.dark-mode .btn {
+  background-color: #1e90ff;
+}
+body.dark-mode .btn:hover {
+  background-color: #1c86ee;
+}
+body.dark-mode .btn.danger {
+  background-color: #ff4444;
+}
+body.dark-mode .btn.danger:hover {
+  background-color: #ee3333;
+}
+body.dark-mode pre,
+body.dark-mode code {
+  background-color: #3c3c3c;
+}
+body.dark-mode input[name="title"],
+body.dark-mode input[name="tags"] {
+  background-color: #2d2d2d;
+  border-color: #444;
+  color: #ddd;
+}
+body.dark-mode .shortcuts {
+  color: #aaa;
+}
+body.dark-mode .modal-content {
+  background-color: #2d2d2d;
+  color: #ddd;
+}
+body.dark-mode .modal-content th,
+body.dark-mode .modal-content td {
+  border-color: #444;
+}
+body.dark-mode .modal-content th {
+  background-color: #444;
+}
+
+/* Editor and Preview */
 .editor-container {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    margin-top: 20px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 20px;
 }
-
 .editor-section, .preview-section {
-    flex: 1;
-    min-width: 300px;
+  flex: 1;
+  min-width: 300px;
 }
-
 .editor-section h3, .preview-section h3 {
-    margin: 0 0 10px 0;
-    color: #333;
-    font-size: 1.1em;
-    padding-bottom: 5px;
-    border-bottom: 2px solid #007bff;
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 1.1em;
+  padding-bottom: 5px;
+  border-bottom: 2px solid #007bff;
 }
-
 .editor-section textarea {
-    width: 100%;
-    min-height: 400px;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    resize: vertical;
-    box-sizing: border-box;
+  width: 100%;
+  min-height: 400px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  box-sizing: border-box;
 }
-
+.editor-section textarea.dragover {
+  border: 2px dashed #007bff;
+  background-color: #f0f8ff;
+}
+body.dark-mode .editor-section textarea.dragover {
+  background-color: #3a3a3a;
+}
 .preview-area {
-    width: 100%;
-    min-height: 400px;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background-color: #fafafa;
-    overflow-y: auto;
-    box-sizing: border-box;
+  width: 100%;
+  min-height: 400px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fafafa;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
-
 .preview-area h1, .preview-area h2, .preview-area h3,
 .preview-area h4, .preview-area h5, .preview-area h6 {
-    color: #333;
-    margin-top: 0;
+  color: #333;
+  margin-top: 0;
 }
-
- .preview-area p {
-    margin: 0 0 10px 0; /* 上方去掉，底部 10px */
-    line-height: 1.6;
+.preview-area p {
+  line-height: 1.6;
+  margin-bottom: 10px;
 }
-
-
 .preview-area ul, .preview-area ol {
-    padding-left: 20px;
+  padding-left: 20px;
 }
-
 .preview-area blockquote {
-    border-left: 4px solid #007bff;
-    margin: 10px 0;
-    padding: 10px 20px;
-    background-color: #f8f9fa;
+  border-left: 4px solid #007bff;
+  margin: 10px 0;
+  padding: 10px 20px;
+  background-color: #f8f9fa;
 }
-
 .preview-area img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 4px;
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
 }
-
 .preview-area table {
-    border-collapse: collapse;
-    width: 100%;
-    margin: 10px 0;
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
 }
-
 .preview-area table th, .preview-area table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
 }
-
 .preview-area table th {
-    background-color: #f2f2f2;
+  background-color: #f2f2f2;
 }
 
-/* 響應式設計 */
-@media (max-width: 768px) {
-    .editor-container {
-        flex-direction: column;
-    }
-    
-    .editor-section, .preview-section {
-        min-width: 100%;
-    }
-    
-    .editor-section textarea, .preview-area {
-        min-height: 300px;
-    }
+/* Code and Math */
+pre, code {
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+pre {
+  padding: 10px;
+  overflow-x: auto;
+}
+.katex {
+  font-size: 1.1em;
 }
 
-.editor-area {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
+/* Form and Actions */
+.actions form {
+  display: inline-flex;
+  gap: 10px;
+  margin-right: 10px;
 }
-.editor-area textarea, .editor-area .preview-area {
-    flex: 1;
-    min-width: 300px;
-    min-height: 400px;
+.actions input[type="text"] {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+input[name="title"], input[name="tags"] {
+  width: 100%;
+  padding: 8px;
+  margin: 5px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.form-actions {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+}
+#autosave-status {
+  margin-left: 10px;
+  font-size: 0.9em;
+  display: inline-block;
 }
 
-/* Button styling */
+/* Buttons */
 .btn {
-    padding: 8px 16px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    text-decoration: none;
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-decoration: none;
 }
 .btn:hover {
-    background-color: #0056b3;
+  background-color: #0056b3;
 }
 .btn.danger {
-    background-color: #dc3545;
+  background-color: #dc3545;
 }
 .btn.danger:hover {
-    background-color: #b02a37;
+  background-color: #b02a37;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 6px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.modal-content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.modal-content th, .modal-content td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+.modal-content th {
+  background-color: #f2f2f2;
+}
+.modal-content .btn {
+  margin-top: 10px;
+  display: block;
+  margin-left: auto;
+}
+
+/* Shortcuts */
+.shortcuts {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .editor-container {
+    flex-direction: column;
+  }
+  .editor-section, .preview-section {
+    min-width: 100%;
+  }
+  .editor-section textarea, .preview-area {
+    min-height: 300px;
+  }
 }

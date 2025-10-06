@@ -1,45 +1,65 @@
-<!-- templates/index.html -->
 <!doctype html>
 <html lang="zh-Hant">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width,initial-scale=1">
-        <title>筆記列表</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    </head>
-    <body>
-        <header>
-            <h1>我的筆記</h1>
-            <div class="actions">
-                <form id="searchForm" action="{{ url_for('index') }}" method="get">
-                    <input type="text" name="q" placeholder="搜尋標題..." value="{{ request.args.get('q', '') }}">
-                    <input type="text" name="tag" placeholder="標籤篩選" value="{{ request.args.get('tag', '') }}">
-                    <button type="submit" class="btn">搜尋</button>
-                </form>
-                <a class="btn" href="{{ url_for('new_note') }}">+ 新增筆記 (Ctrl+N)</a>
-            </div>
-        </header>
-        <main>
-            {% if notes|length == 0 %}
-                <p>目前沒有筆記，按「+ 新增筆記」開始。</p>
-            {% else %}
-                <ul class="notes">
-                {% for n in notes %}
-                    <li>
-                        <a class="note-title" href="{{ url_for('edit_note', note_id=n['id']) }}">{{ n['title'] }}</a>
-                        <div class="meta">更新：{{ n['updated_at'] }}</div>
-                    </li>
-                {% endfor %}
-                </ul>
-            {% endif %}
-        </main>
-    </body>
-</html>
-<script>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>筆記列表</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header>
+    <h1>我的筆記</h1>
+    <div class="actions">
+      <form id="searchForm" action="{{ url_for('index') }}" method="get">
+        <input type="text" name="q" placeholder="搜尋標題..." value="{{ request.args.get('q', '') }}">
+        <input type="text" name="tag" placeholder="標籤篩選" value="{{ request.args.get('tag', '') }}">
+        <button type="submit" class="btn">搜尋</button>
+      </form>
+      <a class="btn" href="{{ url_for('new_note') }}">+ 新增筆記 (Ctrl+N)</a>
+    </div>
+  </header>
+  <main>
+    {% if notes|length == 0 %}
+      <p>目前沒有筆記，按「+ 新增筆記」開始。</p>
+    {% else %}
+      <ul class="notes">
+        {% for n in notes %}
+          <li>
+            <a class="note-title" href="{{ url_for('edit_note', note_id=n['id']) }}">{{ n['title'] }}</a>
+            <div class="meta">更新：{{ n['updated_at'] }}</div>
+            <button class="btn danger delete-note-btn" data-id="{{ n['id'] }}">刪除</button>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </main>
+  <script>
     document.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
-            e.preventDefault();
-            window.location.href = "{{ url_for('new_note') }}";
-        }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        window.location.href = '{{ url_for("new_note") }}';
+      }
     });
-</script>
+    document.querySelectorAll('.delete-note-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const noteId = btn.dataset.id;
+        if (confirm('確定要刪除此筆記嗎？')) {
+          try {
+            const res = await fetch(`/note/${noteId}/delete`, { method: 'POST' });
+            if (res.ok) {
+              btn.closest('li').remove();
+              if (document.querySelectorAll('.notes li').length === 0) {
+                location.reload();
+              }
+            } else {
+              alert('刪除失敗');
+            }
+          } catch (err) {
+            alert('刪除錯誤：' + err.message);
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
