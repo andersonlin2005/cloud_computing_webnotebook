@@ -232,10 +232,11 @@ async function handleShortcut(sc, lineStart, pos) {
 // Keydown event listener
 editor.addEventListener('keydown', async (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-    e.preventDefault();
-    document.getElementById('noteForm').requestSubmit();
-    return;
-  }
+  e.preventDefault();
+  downloadAsHTML();
+  return;
+}
+
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'h') {
     e.preventDefault();
     showShortcutHelp();
@@ -506,46 +507,3 @@ darkModeToggle.addEventListener('click', (event) => {
 if (localStorage.getItem('darkMode') === 'true') {
   document.body.classList.add('dark-mode');
 }
-
-// Export markdown
-const exportBtn = document.createElement('button');
-exportBtn.className = 'btn';
-exportBtn.textContent = '匯出筆記';
-exportBtn.style.marginLeft = '10px';
-document.querySelector('.form-actions').appendChild(exportBtn);
-exportBtn.addEventListener('click', () => {
-  const title = document.querySelector('input[name="title"]').value || '無標題';
-  const content = editor.value;
-  const blob = new Blob([content], { type: 'text/markdown' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${title}.md`;
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-// Import markdown
-const importInput = document.createElement('input');
-importInput.type = 'file';
-importInput.accept = '.md,.txt';
-importInput.style.display = 'none';
-document.body.appendChild(importInput);
-const importBtn = document.createElement('button');
-importBtn.className = 'btn';
-importBtn.textContent = '匯入筆記';
-importBtn.style.marginLeft = '10px';
-document.querySelector('.form-actions').appendChild(importBtn);
-importBtn.addEventListener('click', () => importInput.click());
-importInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      editor.value = event.target.result;
-      renderPreview();
-      importInput.value = '';
-    };
-    reader.readAsText(file);
-  }
-});
