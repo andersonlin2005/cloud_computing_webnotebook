@@ -18,7 +18,7 @@
         <a class="btn" href="{{ url_for('new_note') }}">+ 新增筆記 (Ctrl+N)</a>
         <button class="btn" id="export-all-btn">📂 匯出所有筆記</button>
         <button id="importBtn" class="btn">📥 匯入筆記</button>
-        <input id="importFile" type="file" accept=".txt,.json,.html" style="display:none">
+        <input id="importFile" type="file" accept=".txt,.json,.html,.md" style="display:none">
         </div>
     </header>
 
@@ -69,48 +69,76 @@
         });
         });
 
-        // ✅ 匯出所有筆記（為多個 HTML 檔）
+        // ✅ 匯出所有筆記（改為下載 ZIP 檔案）
         document.getElementById('export-all-btn').addEventListener('click', async () => {
-        try {
-            const res = await fetch('/notes/all');
-            if (!res.ok) throw new Error('匯出失敗');
-            const notes = await res.json();
-            if (!notes.length) {
-            alert('目前沒有筆記可以匯出。');
-            return;
-            }
+            try {
+                const res = await fetch('/notes/all');
+                if (!res.ok) throw new Error('匯出失敗');
+                const notes = await res.json();
+                if (!notes.length) {
+                    alert('目前沒有筆記可以匯出。');
+                    return;
+                }
 
-            // 要求使用者選擇資料夾（需 HTTPS 或 localhost）
-            const dirHandle = await window.showDirectoryPicker();
+                // 檢查是否支持目錄選擇器 API
+                if ('showDirectoryPicker' in window) {
+                    try {
+                        // 使用目錄選擇器 API (較新的瀏覽器)
+                        const dirHandle = await window.showDirectoryPicker();
+                        
+                        for (const note of notes) {
+                            const safeTitle = (note.title || '未命名筆記').replace(/[\\/*?:"<>|]/g, '_');
+                            const fileHandle = await dirHandle.getFileHandle(`${safeTitle}.html`, { create: true });
+                            const writable = await fileHandle.createWritable();
 
-            for (const note of notes) {
-            const safeTitle = (note.title || '未命名筆記').replace(/[\\/*?:"<>|]/g, '_');
-            const fileHandle = await dirHandle.getFileHandle(`${safeTitle}.html`, { create: true });
-            const writable = await fileHandle.createWritable();
-
-            const htmlContent = `
-    <!DOCTYPE html>
-    <html lang="zh-Hant">
-    <head>
+                            const htmlContent = `<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
     <meta charset="UTF-8">
     <title>${note.title}</title>
-    </head>
-    <body>
-    <h1>${note.title}</h1>
-    <hr>
-    ${note.content}
-    </body>
-    </html>`;
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        .meta { color: #666; font-size: 0.9em; margin-bottom: 20px; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        code { background: #f5f5f5; padding: 2px 4px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>${note.title || '未命名筆記'}</h1>
+    <div class="meta">更新時間：${note.updated_at}</div>
+    <div class="content">${note.content}</div>
+</body>
+</html>`;
 
-            await writable.write(htmlContent);
-            await writable.close();
+                            await writable.write(htmlContent);
+                            await writable.close();
+                        }
+                        alert('✅ 所有筆記已成功匯出到你選擇的資料夾！');
+                    } catch (dirErr) {
+                        if (dirErr.name === 'AbortError') {
+                            return; // 用戶取消選擇
+                        }
+                        throw dirErr;
+                    }
+                } else {
+                    // 備用方案：下載單一 JSON 檔案包含所有筆記
+                    const jsonData = JSON.stringify(notes, null, 2);
+                    const blob = new Blob([jsonData], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `所有筆記_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    alert('✅ 所有筆記已匯出為 JSON 檔案！你可以稍後使用匯入功能恢復這些筆記。');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('匯出失敗：' + err.message);
             }
-
-            alert('✅ 所有筆記已成功匯出到你選擇的資料夾！');
-        } catch (err) {
-            console.error(err);
-            alert('匯出失敗：' + err.message);
-        }
         });
 
         // ✅ 匯入筆記（支援 .html/.json/.txt）
@@ -119,102 +147,93 @@
         importBtn.addEventListener('click', () => importFile.click());
 
         importFile.addEventListener('change', async () => {
-        const file = importFile.files[0];
-        if (!file) return;
+            const file = importFile.files[0];
+            if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = async e => {
-            const text = e.target.result;
-            let title = file.name.replace(/\.(html|txt|json)$/i, '');
-            let content = text;
-            let tags = '';
+            const reader = new FileReader();
+            reader.onload = async e => {
+                const text = e.target.result;
+                let title = file.name.replace(/\.(html|txt|json|md)$/i, '');
+                let content = text;
+                let tags = '';
 
-            try {
-            if (file.name.endsWith('.json')) {
-                const note = JSON.parse(text);
-                title = note.title || title;
-                content = note.content || text;
-                tags = note.tags || '';
-            } else if (file.name.endsWith('.html')) {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(text, 'text/html');
-                doc.querySelectorAll('script').forEach(s => s.remove());
+                try {
+                    if (file.name.endsWith('.json')) {
+                        const data = JSON.parse(text);
+                        
+                        // 檢查是否為批量匯出的 JSON（陣列格式）
+                        if (Array.isArray(data)) {
+                            let importCount = 0;
+                            let skipCount = 0;
+                            
+                            for (const note of data) {
+                                const formData = new FormData();
+                                formData.append('title', note.title || '未命名筆記');
+                                formData.append('content', note.content || '');
+                                formData.append('tags', note.tags || '');
 
-                const body = doc.body || doc;
-                // 抓第一個 h1 作為 title
-                const h1 = body.querySelector('h1');
-                if (h1) {
-                    title = h1.textContent.trim();
-                    // 選擇是否把 <h1> 移除，保留內容
-                    h1.remove();
+                                const res = await fetch('/note/save', { method: 'POST', body: formData });
+                                if (res.ok) {
+                                    importCount++;
+                                } else {
+                                    skipCount++;
+                                }
+                            }
+                            
+                            alert(`批量匯入完成！成功匯入 ${importCount} 筆記錄${skipCount > 0 ? `，跳過 ${skipCount} 筆錄` : ''}。`);
+                            location.reload();
+                            return;
+                        } else {
+                            // 單一筆記 JSON
+                            title = data.title || title;
+                            content = data.content || text;
+                            tags = data.tags || '';
+                        }
+                    } else if (file.name.endsWith('.html')) {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(text, 'text/html');
+                        doc.querySelectorAll('script').forEach(s => s.remove());
+
+                        const body = doc.body || doc;
+                        // 抓第一個 h1 作為 title
+                        const h1 = body.querySelector('h1');
+                        if (h1) {
+                            title = h1.textContent.trim();
+                            h1.remove();
+                        }
+                        content = body.textContent.trim();
+                    } else if (file.name.endsWith('.md')) {
+                        // 處理 Markdown 文件
+                        const lines = text.split('\n');
+                        const firstLine = lines[0];
+                        if (firstLine.startsWith('# ')) {
+                            title = firstLine.substring(2).trim();
+                            content = lines.slice(1).join('\n').trim();
+                        } else {
+                            content = text;
+                        }
+                    }
+                } catch (err) {
+                    console.warn('解析錯誤，當作純文字處理:', err);
                 }
-                content = body.textContent.trim();
-            }
-            } catch (err) {
-            console.warn('解析錯誤，當作純文字處理');
-            }
 
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('content', content);
-            formData.append('tags', tags);
+                // 單一筆記匯入
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('content', content);
+                formData.append('tags', tags);
 
-            const res = await fetch('/note/save', { method: 'POST', body: formData });
-            if (res.ok) {
-            alert(`已匯入筆記：${title}`);
-            location.reload();
-            } else {
-            alert('匯入失敗');
-            }
-        };
-        reader.readAsText(file);
+                const res = await fetch('/note/save', { method: 'POST', body: formData });
+                if (res.ok) {
+                    alert(`已匯入筆記：${title}`);
+                    location.reload();
+                } else {
+                    alert('匯入失敗');
+                }
+            };
+            reader.readAsText(file);
         });
 
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.11.0/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
-    <script>
-    document.getElementById('export-all-btn').addEventListener('click', async () => {
-    try {
-        // 從後端取得所有筆記 JSON
-        const res = await fetch('/notes/all'); 
-        if (!res.ok) throw new Error('匯出失敗');
-        const notes = await res.json();
-        if (!notes.length) {
-        alert('目前沒有筆記可以匯出。');
-        return;
-        }
-
-        const zip = new JSZip();
-        const folderName = `我的筆記_${new Date().toISOString().split('T')[0]}`; // 例：我的筆記_2025-10-07
-        const folder = zip.folder(folderName);
-
-        for (const note of notes) {
-        const safeTitle = (note.title || '未命名筆記').replace(/[\\/*?:"<>|]/g, '_');
-        const htmlContent = `
-    <!DOCTYPE html>
-    <html lang="zh-Hant">
-    <head>
-    <meta charset="UTF-8">
-    <title>${note.title}</title>
-    </head>
-    <body>
-    <h1>${note.title}</h1>
-    <hr>
-    ${note.content}
-    </body>
-    </html>`;
-        folder.file(`${safeTitle}.html`, htmlContent);
-        }
-
-        const content = await zip.generateAsync({ type: 'blob' });
-        saveAs(content, `${folderName}.zip`);
-    } catch (err) {
-        console.error(err);
-        alert('匯出失敗：' + err.message);
-    }
-    });
     </script>
 </body>
 </html>
