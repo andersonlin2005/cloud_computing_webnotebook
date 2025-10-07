@@ -80,27 +80,32 @@ def edit_note(note_id):
 
 @app.route('/note/save', methods=['POST'])
 def save_note():
-  data = request.form
-  title = data.get('title', '').strip()[:200] or '無標題'
-  content = data.get('content', '')[:1000000]
-  tags = data.get('tags', '')[:500]
-  now = datetime.utcnow().isoformat()
-  db = get_db()
-  note_id = data.get('id')
-  try:
-    # 只保留一個 note，無論有無 id 都覆蓋第一筆（或新增一筆）
-    cur = db.execute('SELECT id FROM notes ORDER BY id LIMIT 1')
-    row = cur.fetchone()
-    if row:
-      db.execute('UPDATE notes SET title=?, content=?, tags=?, updated_at=? WHERE id=?',
-                (title, content, tags, now, row['id']))
-    else:
-      db.execute('INSERT INTO notes (title, content, tags, created_at, updated_at) VALUES (?,?,?,?,?)',
-                (title, content, tags, now, now))
-    db.commit()
-  except sqlite3.Error as e:
-    return jsonify({'error': '資料庫錯誤'}), 500
-  return redirect(url_for('index'))
+    data = request.form
+    title = data.get('title', '').strip()[:200] or '無標題'
+    content = data.get('content', '')[:1000000]
+    tags = data.get('tags', '')[:500]
+    now = datetime.utcnow().isoformat()
+    db = get_db()
+    note_id = data.get('id')
+
+    try:
+        if note_id:  # ✅ 若有 id → 更新筆記
+            db.execute('''
+                UPDATE notes
+                SET title=?, content=?, tags=?, updated_at=?
+                WHERE id=?
+            ''', (title, content, tags, now, note_id))
+        else:  # ✅ 若沒有 id → 新增筆記
+            db.execute('''
+                INSERT INTO notes (title, content, tags, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (title, content, tags, now, now))
+        db.commit()
+    except sqlite3.Error as e:
+        print('Database error:', e)
+        return jsonify({'error': '資料庫錯誤'}), 500
+
+    return redirect(url_for('index'))
 
 @app.route('/note/<int:note_id>/delete', methods=['POST'])
 def delete_note(note_id):
@@ -145,6 +150,13 @@ def get_tags():
     if row['tags']:
       tags.update(tag.strip() for tag in row['tags'].split(','))
   return jsonify(list(tags))
+
+@app.route('/notes/all')
+def export_all_notes():
+    db = get_db()
+    cur = db.execute('SELECT id, title, content, updated_at FROM notes ORDER BY updated_at DESC')
+    notes = [dict(row) for row in cur.fetchall()]
+    return jsonify(notes)
 
 @app.errorhandler(404)
 def not_found(error):
