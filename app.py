@@ -88,11 +88,14 @@ def save_note():
   db = get_db()
   note_id = data.get('id')
   try:
-    if note_id:
-      db.execute('UPDATE notes SET title=?, content=?, tags=?, updated_at=? WHERE id=?', 
-                (title, content, tags, now, note_id))
+    # 只保留一個 note，無論有無 id 都覆蓋第一筆（或新增一筆）
+    cur = db.execute('SELECT id FROM notes ORDER BY id LIMIT 1')
+    row = cur.fetchone()
+    if row:
+      db.execute('UPDATE notes SET title=?, content=?, tags=?, updated_at=? WHERE id=?',
+                (title, content, tags, now, row['id']))
     else:
-      db.execute('INSERT INTO notes (title, content, tags, created_at, updated_at) VALUES (?,?,?,?,?)', 
+      db.execute('INSERT INTO notes (title, content, tags, created_at, updated_at) VALUES (?,?,?,?,?)',
                 (title, content, tags, now, now))
     db.commit()
   except sqlite3.Error as e:

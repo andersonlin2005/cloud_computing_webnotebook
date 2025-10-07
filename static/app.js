@@ -453,7 +453,8 @@ previewToggle.className = 'btn';
 previewToggle.textContent = '隱藏預覽';
 previewToggle.style.marginLeft = '10px';
 document.querySelector('.form-actions').appendChild(previewToggle);
-previewToggle.addEventListener('click', () => {
+previewToggle.addEventListener('click', (event) => {
+  event.preventDefault();
   const previewSection = document.querySelector('.preview-section');
   previewSection.style.display = previewSection.style.display === 'none' ? 'block' : 'none';
   previewToggle.textContent = previewSection.style.display === 'none' ? '顯示預覽' : '隱藏預覽';
@@ -465,7 +466,8 @@ darkModeToggle.className = 'btn';
 darkModeToggle.textContent = '切換深色模式';
 darkModeToggle.style.marginLeft = '10px';
 document.querySelector('.form-actions').appendChild(darkModeToggle);
-darkModeToggle.addEventListener('click', () => {
+darkModeToggle.addEventListener('click', (event) => {
+  event.preventDefault();
   document.body.classList.toggle('dark-mode');
   localStorage.setItem('darkMode', document.body.classList.contains('dark-mode') ? 'true' : 'false');
 });
