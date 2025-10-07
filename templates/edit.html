@@ -83,22 +83,63 @@
           // 如果 marked 可用，使用它
           if (window.marked) {
             console.log('Using marked.js');
-            return marked.parse ? marked.parse(text) : marked(text);
+            
+            // 確保 marked 設定正確
+            if (typeof marked.setOptions === 'function') {
+              marked.setOptions({
+                breaks: true,
+                gfm: true
+              });
+            }
+            
+            // 使用 marked 解析
+            const result = marked.parse ? marked.parse(text) : marked(text);
+            return result;
           }
           
           console.log('Using fallback parser');
-          // 否則使用簡單解析器
-          return text
-            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-            .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
-            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-            .replace(/^\- (.*$)/gim, '<li>$1</li>')
-            .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
-            .replace(/`([^`]+)`/gim, '<code>$1</code>')
-            .replace(/\n/gim, '<br>');
+          // 改良的簡單解析器
+          const lines = text.split('\n');
+          const htmlLines = lines.map(line => {
+            // 處理標題
+            if (line.startsWith('### ')) {
+              return '<h3>' + line.substring(4) + '</h3>';
+            }
+            if (line.startsWith('## ')) {
+              return '<h2>' + line.substring(3) + '</h2>';
+            }
+            if (line.startsWith('# ')) {
+              return '<h1>' + line.substring(2) + '</h1>';
+            }
+            // 處理引言
+            if (line.startsWith('> ')) {
+              return '<blockquote>' + line.substring(2) + '</blockquote>';
+            }
+            // 處理列表
+            if (line.startsWith('- ')) {
+              return '<li>' + line.substring(2) + '</li>';
+            }
+            if (/^\d+\. /.test(line)) {
+              return '<li>' + line.replace(/^\d+\. /, '') + '</li>';
+            }
+            // 處理空行
+            if (line.trim() === '') {
+              return '<br>';
+            }
+            // 處理一般段落
+            return '<p>' + line + '</p>';
+          });
+          
+          let html = htmlLines.join('');
+          
+          // 處理行內格式
+          html = html
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+            .replace(/~~(.*?)~~/g, '<del>$1</del>');
+          
+          return html;
         } catch (err) {
           console.error('Markdown parsing error:', err);
           return '<p style="color: red;">解析錯誤：' + err.message + '</p>';
@@ -136,6 +177,17 @@
         clearTimeout(timeout);
         timeout = setTimeout(renderPreview, 300);
       });
+      
+      // 添加測試按鈕用於調試
+      const testBtn = document.createElement('button');
+      testBtn.textContent = '測試 #123';
+      testBtn.type = 'button';
+      testBtn.style.marginLeft = '10px';
+      testBtn.onclick = function() {
+        editor.value = '# 123\n\n這是一個測試標題。\n\n## 子標題\n\n- 列表項目\n- **粗體文字**\n- *斜體文字*';
+        renderPreview();
+      };
+      document.querySelector('.form-actions').appendChild(testBtn);
       
       console.log('Preview initialized successfully');
     });

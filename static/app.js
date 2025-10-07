@@ -64,17 +64,47 @@ function showAutosaveStatus(message, isError = false) {
 
 // Fallback simple markdown parser
 function simpleMarkdownParse(text) {
-  return text
-    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-    .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
-    .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-    .replace(/\*(.*)\*/gim, '<em>$1</em>')
-    .replace(/^\- (.*$)/gim, '<li>$1</li>')
-    .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
-    .replace(/`([^`]+)`/gim, '<code>$1</code>')
-    .replace(/\n/gim, '<br>');
+  const lines = text.split('\n');
+  const htmlLines = lines.map(line => {
+    // 處理標題
+    if (line.startsWith('### ')) {
+      return '<h3>' + line.substring(4) + '</h3>';
+    }
+    if (line.startsWith('## ')) {
+      return '<h2>' + line.substring(3) + '</h2>';
+    }
+    if (line.startsWith('# ')) {
+      return '<h1>' + line.substring(2) + '</h1>';
+    }
+    // 處理引言
+    if (line.startsWith('> ')) {
+      return '<blockquote>' + line.substring(2) + '</blockquote>';
+    }
+    // 處理列表
+    if (line.startsWith('- ')) {
+      return '<li>' + line.substring(2) + '</li>';
+    }
+    if (/^\d+\. /.test(line)) {
+      return '<li>' + line.replace(/^\d+\. /, '') + '</li>';
+    }
+    // 處理空行
+    if (line.trim() === '') {
+      return '<br>';
+    }
+    // 處理一般段落
+    return '<p>' + line + '</p>';
+  });
+  
+  let html = htmlLines.join('');
+  
+  // 處理行內格式
+  html = html
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/~~(.*?)~~/g, '<del>$1</del>');
+  
+  return html;
 }
 
 // Render markdown preview
@@ -97,6 +127,8 @@ function renderPreview() {
         // Configure marked.js with highlight.js
         if (window.marked.setOptions) {
           marked.setOptions({
+            breaks: true,
+            gfm: true,
             highlight: (code, lang) => {
               if (window.hljs && lang && hljs.getLanguage && hljs.getLanguage(lang)) {
                 try {
