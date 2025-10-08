@@ -461,17 +461,7 @@ previewToggle.addEventListener('click', (event) => {
   previewToggle.textContent = previewSection.style.display === 'none' ? '顯示預覽' : '隱藏預覽';
 });
 
-// Dark mode toggle
-const darkModeToggle = document.createElement('button');
-darkModeToggle.className = 'btn';
-darkModeToggle.textContent = '切換深色模式';
-darkModeToggle.style.marginLeft = '10px';
-document.querySelector('.form-actions').appendChild(darkModeToggle);
-darkModeToggle.addEventListener('click', (event) => {
-  event.preventDefault();
-  document.body.classList.toggle('dark-mode');
-  localStorage.setItem('darkMode', document.body.classList.contains('dark-mode') ? 'true' : 'false');
-});
+// Apply dark mode from localStorage (shared with index.html)
 if (localStorage.getItem('darkMode') === 'true') {
   document.body.classList.add('dark-mode');
 }

@@ -19,6 +19,7 @@
         <button class="btn" id="export-all-btn">📂 匯出所有筆記</button>
         <button id="importBtn" class="btn">📥 匯入筆記</button>
         <input id="importFile" type="file" accept=".txt,.json,.html" style="display:none">
+        <button id="themeToggle" class="btn">🌙 深色模式</button>
         </div>
     </header>
 
@@ -89,18 +90,18 @@
             const writable = await fileHandle.createWritable();
 
             const htmlContent = `
-    <!DOCTYPE html>
-    <html lang="zh-Hant">
-    <head>
-    <meta charset="UTF-8">
-    <title>${note.title}</title>
-    </head>
-    <body>
-    <h1>${note.title}</h1>
-    <hr>
-    ${note.content}
-    </body>
-    </html>`;
+            <!DOCTYPE html>
+            <html lang="zh-Hant">
+            <head>
+            <meta charset="UTF-8">
+            <title>${note.title}</title>
+            </head>
+            <body>
+            <h1>${note.title}</h1>
+            <hr>
+            ${note.content}
+            </body>
+            </html>`;
 
             await writable.write(htmlContent);
             await writable.close();
@@ -173,7 +174,6 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.11.0/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
     <script>
     document.getElementById('export-all-btn').addEventListener('click', async () => {
     try {
@@ -193,18 +193,18 @@
         for (const note of notes) {
         const safeTitle = (note.title || '未命名筆記').replace(/[\\/*?:"<>|]/g, '_');
         const htmlContent = `
-    <!DOCTYPE html>
-    <html lang="zh-Hant">
-    <head>
-    <meta charset="UTF-8">
-    <title>${note.title}</title>
-    </head>
-    <body>
-    <h1>${note.title}</h1>
-    <hr>
-    ${note.content}
-    </body>
-    </html>`;
+        <!DOCTYPE html>
+        <html lang="zh-Hant">
+        <head>
+        <meta charset="UTF-8">
+        <title>${note.title}</title>
+        </head>
+        <body>
+        <h1>${note.title}</h1>
+        <hr>
+        ${note.content}
+        </body>
+        </html>`;
         folder.file(`${safeTitle}.html`, htmlContent);
         }
 
@@ -215,6 +215,31 @@
         alert('匯出失敗：' + err.message);
     }
     });
+    </script>
+    <script>
+    const themeToggle = document.getElementById('themeToggle');
+
+    function applyTheme(mode) {
+        if (mode === 'dark') {
+        document.body.classList.add('dark-mode');
+        if (themeToggle) themeToggle.textContent = '☀️ 淺色模式';
+        } else {
+        document.body.classList.remove('dark-mode');
+        if (themeToggle) themeToggle.textContent = '🌙 深色模式';
+        }
+    }
+
+    // 初始化：從 localStorage 讀取
+    const savedMode = localStorage.getItem('theme') || 'light';
+    applyTheme(savedMode);
+
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+        const newMode = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+        localStorage.setItem('theme', newMode);
+        applyTheme(newMode);
+        });
+    }
     </script>
 </body>
 </html>

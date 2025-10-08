@@ -1,187 +1,194 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>{{ '編輯筆記' if note else '新增筆記' }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify@4.17.0/dist/tagify.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>{{ '編輯筆記' if note else '新增筆記' }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify@4.17.0/dist/tagify.css">
 </head>
 <body>
-  <header>
-    <h1>{{ '編輯筆記' if note else '新增筆記' }}</h1>
-    <div class="shortcuts">
-      快捷鍵：`---` 分隔線、`pic` 圖片、`todo` 待辦、`#` 標題、`>` 引言、` ``` ` 程式區塊、`date` 日期、`time` 時間、`link` 連結、`table` 表格、`math` 公式、`bold` 加粗、`italic` 斜體、`list` 清單、`strike` 刪除線、`code` 行內程式碼、`mark` 高亮、`ol` 有序清單、`done` 已完成待辦、`now` 日期時間、`uuid` 唯一ID、`lorem` 範例文本、`meeting` 會議記錄、`jsdoc` JSDoc、`Ctrl+S` 儲存、`Ctrl+H` 幫助
-    </div>
-  </header>
-  <main>
-    <form id="noteForm" action="{{ url_for('save_note') }}" method="post">
-      <input type="hidden" name="id" value="{{ note['id'] if note else '' }}">
-      <input type="text" name="title" placeholder="標題" value="{{ note['title'] if note else '' }}">
-      <input type="text" name="tags" placeholder="標籤（逗號分隔）" value="{{ note['tags'] if note else '' }}">
-      <div class="editor-container">
-        <div class="editor-section">
-          <h3>編輯</h3>
-          <textarea id="editor" name="content" placeholder="在這裡輸入筆記（支援快捷指令）">{{ note['content'] if note else '' }}</textarea>
+    <script>
+    // 在載入時套用深色模式設定
+    (function() {
+        const mode = localStorage.getItem('theme') || 'light';
+        if (mode === 'dark') document.body.classList.add('dark-mode');
+    })();
+    </script>
+    <header>
+        <h1>{{ '編輯筆記' if note else '新增筆記' }}</h1>
+        <div class="shortcuts">
+        快捷鍵：`---` 分隔線、`pic` 圖片、`todo` 待辦、`#` 標題、`>` 引言、` ``` ` 程式區塊、`date` 日期、`time` 時間、`link` 連結、`table` 表格、`math` 公式、`bold` 加粗、`italic` 斜體、`list` 清單、`strike` 刪除線、`code` 行內程式碼、`mark` 高亮、`ol` 有序清單、`done` 已完成待辦、`now` 日期時間、`uuid` 唯一ID、`lorem` 範例文本、`meeting` 會議記錄、`jsdoc` JSDoc、`Ctrl+S` 儲存、`Ctrl+H` 幫助
         </div>
-        <div class="preview-section">
-          <h3>預覽</h3>
-          <div id="preview" class="preview-area">
-            <p style="color: #888;">正在初始化預覽...</p>
-          </div>
+    </header>
+    <main>
+        <form id="noteForm" action="{{ url_for('save_note') }}" method="post">
+        <input type="hidden" name="id" value="{{ note['id'] if note else '' }}">
+        <input type="text" name="title" placeholder="標題" value="{{ note['title'] if note else '' }}">
+        <input type="text" name="tags" placeholder="標籤（逗號分隔）" value="{{ note['tags'] if note else '' }}">
+        <div class="editor-container">
+            <div class="editor-section">
+            <h3>編輯</h3>
+            <textarea id="editor" name="content" placeholder="在這裡輸入筆記（支援快捷指令）">{{ note['content'] if note else '' }}</textarea>
+            </div>
+            <div class="preview-section">
+            <h3>預覽</h3>
+            <div id="preview" class="preview-area">
+                <p style="color: #888;">正在初始化預覽...</p>
+            </div>
+            </div>
         </div>
-      </div>
-      <div class="form-actions">
-        <button type="submit" class="btn">儲存</button>
-        <button id="downloadBtn" type="button" class="btn">下載 HTML</button>
-        <button id="delBtn" type="button" class="btn danger">刪除</button>
-        <div id="autosave-status"></div>
-      </div>
-    </form>
-    <input id="imageInput" type="file" accept="image/*" style="display:none">
-  </main>
-  
-  <!-- 使用更可靠的 CDN -->
-  <script src="https://unpkg.com/marked@9.1.6/marked.min.js"></script>
-  <script src="https://unpkg.com/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="https://unpkg.com/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-  <script src="https://unpkg.com/@yaireo/tagify@4.17.0/dist/tagify.min.js"></script>
-  
-  <!-- 直接內嵌預覽功能 -->
-  <script>
-    // 立即測試
-    console.log('Script loaded');
+        <div class="form-actions">
+            <button type="submit" class="btn">儲存</button>
+            <button id="downloadBtn" type="button" class="btn">下載 HTML</button>
+            <button id="delBtn" type="button" class="btn danger">刪除</button>
+            <div id="autosave-status"></div>
+        </div>
+        </form>
+        <input id="imageInput" type="file" accept="image/*" style="display:none">
+    </main>
     
-    // 立即初始化預覽功能
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM loaded');
-      
-      const editor = document.getElementById('editor');
-      const preview = document.getElementById('preview');
-      
-      console.log('Editor:', editor);
-      console.log('Preview:', preview);
-      
-      if (!editor || !preview) {
-        console.error('Editor or preview element not found');
-        return;
-      }
-      
-      console.log('Elements found, initializing preview...');
-      
-      // 立即測試預覽
-      preview.innerHTML = '<p style="color: green;">✅ 預覽功能已啟動！</p>';
-      
-      // 簡單的 markdown 解析函數
-      function parseMarkdown(text) {
-        if (!text || text.trim() === '') {
-          return '<p style="color: #888;">請輸入內容以查看預覽</p>';
+    <!-- 使用更可靠的 CDN -->
+    <script src="https://unpkg.com/marked@9.1.6/marked.min.js"></script>
+    <script src="https://unpkg.com/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://unpkg.com/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <script src="https://unpkg.com/@yaireo/tagify@4.17.0/dist/tagify.min.js"></script>
+    
+    <!-- 直接內嵌預覽功能 -->
+    <script>
+        // 立即測試
+        console.log('Script loaded');
+        
+        // 立即初始化預覽功能
+        document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded');
+        
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        
+        console.log('Editor:', editor);
+        console.log('Preview:', preview);
+        
+        if (!editor || !preview) {
+            console.error('Editor or preview element not found');
+            return;
         }
         
-        try {
-          // 如果 marked 可用，使用它
-          if (window.marked) {
-            console.log('Using marked.js');
-            return marked.parse ? marked.parse(text) : marked(text);
-          }
-          
-          console.log('Using fallback parser');
-          // 否則使用簡單解析器
-          return text
-            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-            .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
-            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-            .replace(/^\- (.*$)/gim, '<li>$1</li>')
-            .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
-            .replace(/`([^`]+)`/gim, '<code>$1</code>')
-            .replace(/\n/gim, '<br>');
-        } catch (err) {
-          console.error('Markdown parsing error:', err);
-          return '<p style="color: red;">解析錯誤：' + err.message + '</p>';
+        console.log('Elements found, initializing preview...');
+        
+        // 立即測試預覽
+        preview.innerHTML = '<p style="color: green;">✅ 預覽功能已啟動！</p>';
+        
+        // 簡單的 markdown 解析函數
+        function parseMarkdown(text) {
+            if (!text || text.trim() === '') {
+            return '<p style="color: #888;">請輸入內容以查看預覽</p>';
+            }
+            
+            try {
+            // 如果 marked 可用，使用它
+            if (window.marked) {
+                console.log('Using marked.js');
+                return marked.parse ? marked.parse(text) : marked(text);
+            }
+            
+            console.log('Using fallback parser');
+            // 否則使用簡單解析器
+            return text
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
+                .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+                .replace(/^\- (.*$)/gim, '<li>$1</li>')
+                .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
+                .replace(/`([^`]+)`/gim, '<code>$1</code>')
+                .replace(/\n/gim, '<br>');
+            } catch (err) {
+            console.error('Markdown parsing error:', err);
+            return '<p style="color: red;">解析錯誤：' + err.message + '</p>';
+            }
         }
-      }
-      
-      // 渲染預覽
-      function renderPreview() {
-        try {
-          console.log('Rendering preview...');
-          const html = parseMarkdown(editor.value);
-          preview.innerHTML = html;
-          console.log('Preview updated successfully');
-        } catch (err) {
-          console.error('Render error:', err);
-          preview.innerHTML = '<p style="color: red;">渲染失敗：' + err.message + '</p>';
+        
+        // 渲染預覽
+        function renderPreview() {
+            try {
+            console.log('Rendering preview...');
+            const html = parseMarkdown(editor.value);
+            preview.innerHTML = html;
+            console.log('Preview updated successfully');
+            } catch (err) {
+            console.error('Render error:', err);
+            preview.innerHTML = '<p style="color: red;">渲染失敗：' + err.message + '</p>';
+            }
         }
-      }
-      
-      // 初始渲染
-      setTimeout(() => {
-        renderPreview();
-      }, 100);
-      
-      // 監聽輸入事件
-      let timeout;
-      editor.addEventListener('input', function() {
-        console.log('Input detected');
-        clearTimeout(timeout);
-        timeout = setTimeout(renderPreview, 300);
-      });
-      
-      // 也監聽 keyup 事件作為備用
-      editor.addEventListener('keyup', function() {
-        clearTimeout(timeout);
-        timeout = setTimeout(renderPreview, 300);
-      });
-      
-      console.log('Preview initialized successfully');
-    });
-  </script>
-  
-  <!-- 載入完整的 app.js -->
-  <script src="{{ url_for('static', filename='app.js') }}"></script>
-  <script>
-    const uploadUrl = '{{ url_for("upload_image") }}';
-    window.APP_INIT = { uploadUrl };
-    const tagsInput = document.querySelector('input[name="tags"]');
-    if (window.Tagify && tagsInput) {
-      fetch('/tags')
-        .then(res => res.json())
-        .then(tags => {
-          new Tagify(tagsInput, {
-            whitelist: tags,
-            maxTags: 10,
-            dropdown: { maxItems: 20, enabled: 0 }
-          });
-        })
-        .catch(err => console.error('Tagify initialization failed:', err));
-    } else {
-      console.warn('Tagify not loaded or tags input not found');
-      if (tagsInput) {
-        tagsInput.placeholder = '標籤（逗號分隔，自動完成不可用）';
-      }
-    }
+        
+        // 初始渲染
+        setTimeout(() => {
+            renderPreview();
+        }, 100);
+        
+        // 監聽輸入事件
+        let timeout;
+        editor.addEventListener('input', function() {
+            console.log('Input detected');
+            clearTimeout(timeout);
+            timeout = setTimeout(renderPreview, 300);
+        });
+        
+        // 也監聽 keyup 事件作為備用
+        editor.addEventListener('keyup', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(renderPreview, 300);
+        });
+        
+        console.log('Preview initialized successfully');
+        });
+    </script>
     
-    // Debug information
-    window.addEventListener('load', () => {
-      console.log('Libraries loaded:', {
-        marked: !!window.marked,
-        katex: !!window.katex,
-        hljs: !!window.hljs,
-        tagify: !!window.Tagify,
-        renderMathInElement: !!window.renderMathInElement
-      });
-      
-      if (!window.marked || !window.katex || !window.hljs) {
-        const preview = document.getElementById('preview');
-        if (preview) {
-          preview.innerHTML = '<p style="color: orange;">正在載入必要資源，請稍候...</p>';
+    <!-- 載入完整的 app.js -->
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script>
+        const uploadUrl = '{{ url_for("upload_image") }}';
+        window.APP_INIT = { uploadUrl };
+        const tagsInput = document.querySelector('input[name="tags"]');
+        if (window.Tagify && tagsInput) {
+        fetch('/tags')
+            .then(res => res.json())
+            .then(tags => {
+            new Tagify(tagsInput, {
+                whitelist: tags,
+                maxTags: 10,
+                dropdown: { maxItems: 20, enabled: 0 }
+            });
+            })
+            .catch(err => console.error('Tagify initialization failed:', err));
+        } else {
+        console.warn('Tagify not loaded or tags input not found');
+        if (tagsInput) {
+            tagsInput.placeholder = '標籤（逗號分隔，自動完成不可用）';
         }
-      }
-    });
-  </script>
+        }
+        
+        // Debug information
+        window.addEventListener('load', () => {
+        console.log('Libraries loaded:', {
+            marked: !!window.marked,
+            katex: !!window.katex,
+            hljs: !!window.hljs,
+            tagify: !!window.Tagify,
+            renderMathInElement: !!window.renderMathInElement
+        });
+        
+        if (!window.marked || !window.katex || !window.hljs) {
+            const preview = document.getElementById('preview');
+            if (preview) {
+            preview.innerHTML = '<p style="color: orange;">正在載入必要資源，請稍候...</p>';
+            }
+        }
+        });
+    </script>
 </body>
 </html>
