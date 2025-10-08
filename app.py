@@ -154,7 +154,7 @@ def get_tags():
 @app.route('/notes/all')
 def export_all_notes():
     db = get_db()
-    cur = db.execute('SELECT id, title, content, tags, created_at, updated_at FROM notes ORDER BY updated_at DESC')
+    cur = db.execute('SELECT id, title, content, updated_at FROM notes ORDER BY updated_at DESC')
     notes = [dict(row) for row in cur.fetchall()]
     return jsonify(notes)
 
