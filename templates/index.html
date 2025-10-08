@@ -187,7 +187,7 @@
         }
 
         const zip = new JSZip();
-        const folderName = `我的筆記_${new Date().toISOString().split('T')[0]}`; // 例：我的筆記_2025-10-07
+        const folderName = `我的筆記_${new Date().toISOString().split('T')[0]}`;
         const folder = zip.folder(folderName);
 
         for (const note of notes) {

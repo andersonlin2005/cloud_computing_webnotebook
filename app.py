@@ -87,25 +87,47 @@ def save_note():
     now = datetime.utcnow().isoformat()
     db = get_db()
     note_id = data.get('id')
+    
+    # 修正：確保 note_id 是有效的數字，而不是空字串
+    if note_id and note_id.strip() and note_id.strip().isdigit():
+        note_id = int(note_id.strip())
+    else:
+        note_id = None
 
     try:
-        if note_id:  # ✅ 若有 id → 更新筆記
-            db.execute('''
-                UPDATE notes
-                SET title=?, content=?, tags=?, updated_at=?
-                WHERE id=?
-            ''', (title, content, tags, now, note_id))
-        else:  # ✅ 若沒有 id → 新增筆記
-            db.execute('''
+        if note_id:  # ✅ 若有有效 id → 更新筆記
+            # 先檢查筆記是否存在
+            cur = db.execute('SELECT id FROM notes WHERE id=?', (note_id,))
+            if cur.fetchone():
+                db.execute('''
+                    UPDATE notes
+                    SET title=?, content=?, tags=?, updated_at=?
+                    WHERE id=?
+                ''', (title, content, tags, now, note_id))
+            else:
+                # 如果筆記不存在，創建新筆記
+                note_id = None
+        
+        if not note_id:  # ✅ 若沒有有效 id → 新增筆記
+            cur = db.execute('''
                 INSERT INTO notes (title, content, tags, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?)
             ''', (title, content, tags, now, now))
+            note_id = cur.lastrowid  # 獲取新創建的筆記 ID
+        
         db.commit()
     except sqlite3.Error as e:
         print('Database error:', e)
         return jsonify({'error': '資料庫錯誤'}), 500
 
-    return redirect(url_for('index'))
+    # 檢查是否是 AJAX 請求（通常用於自動儲存）
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or \
+              request.headers.get('Accept', '').find('application/json') != -1
+    
+    if is_ajax:
+        return jsonify({'success': True, 'note_id': note_id})
+    else:
+        return redirect(url_for('index'))
 
 @app.route('/note/<int:note_id>/delete', methods=['POST'])
 def delete_note(note_id):
@@ -154,7 +176,7 @@ def get_tags():
 @app.route('/notes/all')
 def export_all_notes():
     db = get_db()
-    cur = db.execute('SELECT id, title, content, updated_at FROM notes ORDER BY updated_at DESC')
+    cur = db.execute('SELECT id, title, content, tags, created_at, updated_at FROM notes ORDER BY updated_at DESC')
     notes = [dict(row) for row in cur.fetchall()]
     return jsonify(notes)
 

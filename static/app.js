@@ -331,13 +331,33 @@ if (editor) {
       try {
         const form = document.getElementById('noteForm');
         const formData = new FormData(form);
-        const res = await fetch(form.action, { method: 'POST', body: formData });
+        const res = await fetch(form.action, { 
+          method: 'POST', 
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+        
         if (res.ok) {
+          // 檢查是否返回了新的筆記 ID
+          const contentType = res.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const result = await res.json();
+            if (result.note_id && !form.querySelector('input[name="id"]').value) {
+              // 更新隱藏的 ID 欄位，避免重複創建
+              form.querySelector('input[name="id"]').value = result.note_id;
+              // 更新 URL 為編輯模式
+              const newUrl = `/note/${result.note_id}/edit`;
+              window.history.replaceState({}, '', newUrl);
+            }
+          }
           showAutosaveStatus('自動儲存成功');
         } else {
           showAutosaveStatus('自動儲存失敗', true);
         }
       } catch (err) {
+        console.error('Autosave error:', err);
         showAutosaveStatus('自動儲存錯誤', true);
       }
     }
