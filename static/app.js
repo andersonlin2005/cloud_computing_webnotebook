@@ -44,7 +44,7 @@ if (!editor || !preview) {
   console.log('Not on editor page, skipping editor initialization');
 } else {
   console.log('Editor page detected');
-  
+
   // 如果預覽還沒有內容，嘗試初始化
   if (!preview.innerHTML || preview.innerHTML.trim() === '') {
     setTimeout(() => {
@@ -80,17 +80,17 @@ function simpleMarkdownParse(text) {
 // Render markdown preview
 function renderPreview() {
   if (!preview || !editor) return;
-  
+
   try {
     const md = editor.value.trim();
-    
+
     if (!md) {
       preview.innerHTML = '<p style="color: #888;">請輸入內容以查看預覽</p>';
       return;
     }
-    
+
     let html;
-    
+
     // Try to use marked.js first
     if (window.marked) {
       try {
@@ -110,7 +110,7 @@ function renderPreview() {
             }
           });
         }
-        
+
         // Parse markdown - handle both old and new API
         if (typeof marked.parse === 'function') {
           html = marked.parse(md);
@@ -127,7 +127,7 @@ function renderPreview() {
       // Use fallback parser
       console.log('Using fallback markdown parser');
       html = simpleMarkdownParse(md);
-      
+
       // Try to load marked.js again
       if (!window.markedLoadAttempted) {
         window.markedLoadAttempted = true;
@@ -140,9 +140,9 @@ function renderPreview() {
         document.head.appendChild(script);
       }
     }
-    
+
     preview.innerHTML = html;
-    
+
     // Render math with KaTeX if available
     if (window.renderMathInElement) {
       renderMathInElement(preview, {
@@ -200,10 +200,10 @@ async function handleShortcut(sc, lineStart, pos) {
 // Keydown event listener
 editor.addEventListener('keydown', async (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-  e.preventDefault();
-  downloadAsHTML();
-  return;
-}
+    e.preventDefault();
+    downloadAsHTML();
+    return;
+  }
 
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'h') {
     e.preventDefault();
@@ -331,14 +331,14 @@ if (editor) {
       try {
         const form = document.getElementById('noteForm');
         const formData = new FormData(form);
-        const res = await fetch(form.action, { 
-          method: 'POST', 
+        const res = await fetch(form.action, {
+          method: 'POST',
           body: formData,
           headers: {
             'X-Requested-With': 'XMLHttpRequest'
           }
         });
-        
+
         if (res.ok) {
           // 檢查是否返回了新的筆記 ID
           const contentType = res.headers.get('content-type');
@@ -370,36 +370,129 @@ if (editor) {
 function downloadAsHTML() {
   const title = document.querySelector('input[name="title"]').value || '未命名筆記';
   const content = editor.value;
-  const renderedHTML = marked.parse(content);
-  const fullHTML = `
-<!DOCTYPE html>
+
+  let renderedHTML;
+  if (window.marked && typeof window.marked.parse === 'function') {
+    renderedHTML = marked.parse(content);
+  } else {
+    renderedHTML = simpleMarkdownParse(content);
+  }
+
+  const fullHTML = `<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${title}</title>
+<!-- Marked.js for Markdown parsing -->
+<script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+<!-- KaTeX for math rendering -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<!-- Highlight.js for syntax highlighting -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/es/highlight.min.js"></script>
 <style>
-body { font-family: 'Microsoft JhengHei', sans-serif; margin: 40px; background: #fafafa; }
-pre code { background: #f4f4f4; padding: 8px; border-radius: 5px; display: block; }
-hr { border: none; border-top: 1px solid #ccc; margin: 20px 0; }
-img { max-width: 100%; border-radius: 5px; }
-blockquote { color: #555; border-left: 4px solid #ccc; margin-left: 0; padding-left: 10px; }
+body { 
+  font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif; 
+  margin: 40px auto;
+  max-width: 900px;
+  background: #fafafa;
+  line-height: 1.6;
+  color: #333;
+}
+h1, h2, h3, h4, h5, h6 { 
+  margin-top: 24px; 
+  margin-bottom: 16px; 
+  font-weight: 600; 
+  line-height: 1.25;
+}
+h1 { font-size: 2em; border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; }
+h2 { font-size: 1.5em; border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; }
+h3 { font-size: 1.25em; }
+pre { 
+  background: #f6f8fa; 
+  padding: 16px; 
+  border-radius: 6px; 
+  overflow-x: auto;
+  border: 1px solid #e1e4e8;
+}
+code { 
+  background-color: rgba(27,31,35,0.05); 
+  border-radius: 3px; 
+  padding: 0.2em 0.4em;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 85%;
+}
+pre code { 
+  background: transparent; 
+  padding: 0;
+  font-size: 100%;
+}
+hr { 
+  border: none; 
+  border-top: 2px solid #e1e4e8; 
+  margin: 24px 0; 
+}
+img { 
+  max-width: 100%; 
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+blockquote { 
+  color: #6a737d; 
+  border-left: 4px solid #dfe2e5; 
+  margin: 0;
+  padding: 0 1em;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 16px 0;
+}
+table th, table td {
+  border: 1px solid #dfe2e5;
+  padding: 6px 13px;
+}
+table th {
+  background-color: #f6f8fa;
+  font-weight: 600;
+}
+table tr:nth-child(2n) {
+  background-color: #f6f8fa;
+}
+a { color: #0366d6; text-decoration: none; }
+a:hover { text-decoration: underline; }
 .katex { font-size: 1.1em; }
-pre, code { background-color: #f5f5f5; border-radius: 4px; padding: 2px 4px; }
-pre { padding: 10px; overflow-x: auto; }
+ul, ol { padding-left: 2em; }
+li { margin: 0.25em 0; }
 </style>
 </head>
 <body>
 <h1>${title}</h1>
+<div id="content">
 ${renderedHTML}
-<script><!-- Embed marked.js, katex.js, and highlight.js code here in production --></script>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // Render math with KaTeX
   if (window.renderMathInElement) {
     renderMathInElement(document.body, {
       delimiters: [
         { left: '$$', right: '$$', display: true },
-        { left: '$', right: '$', display: false }
-      ]
+        { left: '\\[', right: '\\]', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false }
+      ],
+      throwOnError: false
+    });
+  }
+  
+  // Highlight code blocks
+  if (window.hljs) {
+    document.querySelectorAll('pre code').forEach((block) => {
+      hljs.highlightElement(block);
     });
   }
 });
@@ -428,33 +521,33 @@ function showShortcutHelp() {
             <tr>
               <td><code>${key}</code></td>
               <td>${{
-                '---': '插入分隔線',
-                'pic': '上傳圖片',
-                'todo': '插入待辦事項',
-                '#': '插入一級標題',
-                '##': '插入二級標題',
-                '###': '插入三級標題',
-                '>': '插入引言',
-                '```': '插入程式碼區塊',
-                'date': '插入當前日期',
-                'time': '插入當前時間',
-                'link': '插入超連結',
-                'table': '插入表格',
-                'math': '插入數學公式',
-                'bold': '加粗文字',
-                'italic': '斜體文字',
-                'list': '插入無序清單',
-                'strike': '刪除線文字',
-                'code': '行內程式碼',
-                'mark': '高亮文字',
-                'ol': '插入有序清單',
-                'done': '插入已完成待辦',
-                'now': '插入當前日期與時間',
-                'uuid': '插入唯一識別碼',
-                'lorem': '插入Lorem Ipsum文本',
-                'meeting': '插入會議記錄範本',
-                'jsdoc': '插入JSDoc註解'
-              }[key]}</td>
+      '---': '插入分隔線',
+      'pic': '上傳圖片',
+      'todo': '插入待辦事項',
+      '#': '插入一級標題',
+      '##': '插入二級標題',
+      '###': '插入三級標題',
+      '>': '插入引言',
+      '```': '插入程式碼區塊',
+      'date': '插入當前日期',
+      'time': '插入當前時間',
+      'link': '插入超連結',
+      'table': '插入表格',
+      'math': '插入數學公式',
+      'bold': '加粗文字',
+      'italic': '斜體文字',
+      'list': '插入無序清單',
+      'strike': '刪除線文字',
+      'code': '行內程式碼',
+      'mark': '高亮文字',
+      'ol': '插入有序清單',
+      'done': '插入已完成待辦',
+      'now': '插入當前日期與時間',
+      'uuid': '插入唯一識別碼',
+      'lorem': '插入Lorem Ipsum文本',
+      'meeting': '插入會議記錄範本',
+      'jsdoc': '插入JSDoc註解'
+    }[key]}</td>
             </tr>
           `).join('')}
           <tr><td><code>Ctrl+S</code></td><td>儲存筆記</td></tr>
@@ -485,3 +578,62 @@ previewToggle.addEventListener('click', (event) => {
 if (localStorage.getItem('darkMode') === 'true') {
   document.body.classList.add('dark-mode');
 }
+// Export markdown as .md file
+const exportBtn = document.createElement('button');
+exportBtn.className = 'btn';
+exportBtn.textContent = '匯出筆記(.md)';
+exportBtn.style.marginLeft = '10px';
+const formActions = document.querySelector('.form-actions');
+if (formActions) {
+  formActions.appendChild(exportBtn);
+  exportBtn.addEventListener('click', (event) => {
+    event.preventDefault();
+    const title = document.querySelector('input[name="title"]')?.value || '無標題';
+    const content = editor.value;
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+// Import markdown from .md file
+const importInput = document.createElement('input');
+importInput.type = 'file';
+importInput.accept = '.md,.txt';
+importInput.style.display = 'none';
+document.body.appendChild(importInput);
+
+const importBtn = document.createElement('button');
+importBtn.className = 'btn';
+importBtn.textContent = '匯入筆記(.md)';
+importBtn.style.marginLeft = '10px';
+if (formActions) {
+  formActions.appendChild(importBtn);
+  importBtn.addEventListener('click', (event) => {
+    event.preventDefault();
+    importInput.click();
+  });
+}
+
+importInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      editor.value = event.target.result;
+      renderPreview();
+      // 可選：從檔案名稱更新標題
+      const titleInput = document.querySelector('input[name="title"]');
+      if (titleInput && (!titleInput.value || titleInput.value === '無標題')) {
+        const fileName = file.name.replace(/\.(md|txt)$/i, '');
+        titleInput.value = fileName;
+      }
+      importInput.value = ''; // 清空 input，允許重複匯入相同檔案
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+});
